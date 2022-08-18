@@ -1,0 +1,54 @@
+# Set up the prompt
+
+autoload -Uz promptinit
+promptinit
+prompt adam1
+
+setopt histignorealldups sharehistory
+
+# Use emacs keybindings even if our EDITOR is set to vi
+bindkey -e
+
+# Keep 1000 lines of history within the shell and save it to ~/.zsh_history:
+HISTSIZE=1000
+SAVEHIST=1000
+HISTFILE=~/.zsh_history
+ZSH_THEME=jnrowe
+# Use modern completion system
+autoload -Uz compinit
+compinit
+
+zstyle ':completion:*' auto-description 'specify: %d'
+zstyle ':completion:*' completer _expand _complete _correct _approximate
+zstyle ':completion:*' format 'Completing %d'
+zstyle ':completion:*' group-name ''
+zstyle ':completion:*' menu select=2
+eval "$(dircolors -b)"
+zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
+zstyle ':completion:*' list-colors ''
+zstyle ':completion:*' list-prompt %SAt %p: Hit TAB for more, or the character to insert%s
+zstyle ':completion:*' matcher-list '' 'm:{a-z}={A-Z}' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=* l:|=*'
+zstyle ':completion:*' menu select=long
+zstyle ':completion:*' select-prompt %SScrolling active: current selection at %p%s
+zstyle ':completion:*' use-compctl false
+zstyle ':completion:*' verbose true
+
+zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#)*=0=01;31'
+zstyle ':completion:*:kill:*' command 'ps -u $USER -o pid,%cpu,tty,cputime,cmd'
+cat /etc/motd
+bindkey '\e[1;5C' forward-word        # ctrl right
+bindkey '\e[1;5D' backward-word       # ctrl left
+source <(kubectl completion zsh)  # setup autocomplete in zsh into the current shell
+alias amisus='anubis -ip $(curl -s ip.me) | jq'
+alias pdfid='python /usr/bin/pdfid.py'
+alias msf='/usr/bin/ruby /opt/metasploit-framework/msfconsole'
+alias k='kubectl --cluster default --username=anon --password=" "'
+alias kc='kubectl config set-cluster default --insecure-skip-tls-verify=true --user=anon --username=anon --password="" --server='
+echo "SMSTO:13375611337:HOW" | qrencode -t ascii
+alias heatlevel='sh /usr/bin/heatlevel.sh'
+alias help='cat /opt/readme'
+alias aws-anon='aws --no-sign-request'
+export CID="$(cat /proc/self/cgroup | grep "docker" | head -n1 | sed s/\\//\\n/g | tail -1)"
+export SANDBOX_LOCATION="noirgate-s3-sandbox-${CID:0:32}"
+alias prep-s3='git clone https://github.com/awslabs/aws-js-s3-explorer && cd ./aws-js-s3-explorer && aws-anon s3 sync . s3://$SANDBOX_LOCATION'
+alias sync-loot='LD_PRELOAD="" aws-anon s3 sync . s3://$SANDBOX_LOCATION'

@@ -1,0 +1,57 @@
+events {
+        worker_connections 768;
+}
+http{
+# Noirgate SMS >/dev/null
+server {
+  listen 443 ssl;
+  ssl_certificate /etc/nginx/cert.pem;
+  ssl_certificate_key /etc/nginx/key.pem;
+  server_name t.NOIRGATE_SUBDOMAIN.NOIRGATE_TLD;
+
+  location / {
+    return 200 '';
+     default_type text/plain;
+    }
+}
+
+server {
+  listen 443 ssl;
+  ssl_certificate /etc/nginx/cert.pem;
+  ssl_certificate_key /etc/nginx/key.pem;
+  server_name try.NOIRGATE_SUBDOMAIN.NOIRGATE_TLD;
+  location / {
+   index "index.html";  
+    }
+}
+
+server {
+  listen 443 ssl;
+  ssl_certificate /etc/nginx/cert.pem;
+  ssl_certificate_key /etc/nginx/key.pem;
+  server_name api.NOIRGATE_SUBDOMAIN.NOIRGATE_TLD;
+
+  location / {
+    proxy_pass http://noirgate-manager:31337/api;
+    proxy_http_version 1.1;
+    }
+}
+
+# Noirgate - DiscoDNS proxy to Docker
+server {
+  listen 443 ssl;
+  ssl_certificate /etc/nginx/cert.pem;
+  ssl_certificate_key /etc/nginx/key.pem;
+  server_name *.NOIRGATE_SUBDOMAIN.NOIRGATE_TLD;
+
+  location / {
+    resolver 172.21.0.3:9053;
+    proxy_pass http://$http_host:8080;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade websocket;
+    proxy_set_header Connection upgrade;
+    proxy_set_header Host $Host;
+
+    }
+}
+}

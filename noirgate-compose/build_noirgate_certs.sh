@@ -1,0 +1,1 @@
+certbot certonly --manual --agree-tos -d "*.$NOIRGATE_SUB.$NOIRGATE_TLD" --register-unsafely-without-email --preferred-challenges dns --work-dir ./nginx-temp --logs-dir ./nginx-temp --config-dir ./nginx-temp

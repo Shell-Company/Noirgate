@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/1.5.2/tailwind.min.css">
+   <!-- Primary Meta Tags -->
+    <title>Noirgate</title>
+    <meta name="title" content="Noirgate">
+    <meta name="description" content="Create disposable on-demand web sandboxes loaded with security tools, and hardened for anonymity">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://try.noirgate.shellz.wtf/">
+    <meta property="og:title" content="Noirgate">
+    <meta property="og:description" content="Create disposable on-demand web sandboxes loaded with security tools, and hardened for anonymity">
+    <meta property="og:image" content="https://try.noirgate.shellz.wtf/90579378.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://try.noirgate.shellz.wtf/">
+    <meta property="twitter:title" content="Noirgate">
+    <meta property="twitter:description" content="Create disposable on-demand web sandboxes loaded with security tools, and hardened for anonymity">
+    <meta property="twitter:image" content="https://try.noirgate.shellz.wtf/90579378.png">
+    <!-- favicon -->
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>Noirgate Shellz</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.1/ace.js"></script>
+    <style>
+        #editor {
+          height: 100vh;
+        }
+      </style>
+</head>
+<body>
+    <div class="flex h-screen w-screen">
+        <div class="w-1/2 h-1/2 bg-gray-900">
+            <div class="flex flex-col items-center justify-left h-full">
+                <div>
+                    <div class="flex flex-col items-center">
+
+                        <div class="flex">
+                            <button id="btn-shell" class="px-4 py-2 m-2 bg-blue-500 rounded-lg shadow-lg text-white">SHELL</button>
+                            <button id="btn-help" class="px-4 py-2 m-2 bg-blue-500 rounded-lg shadow-lg text-white">HELP</button>
+                            <button id="btn-bye" class="px-4 py-2 m-2 bg-blue-500 rounded-lg shadow-lg text-white">BYE</button>
+                            <button id="btn-otp" class="px-4 py-2 m-2 bg-blue-500 rounded-lg shadow-lg text-white">OTP</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-full h-full bg-gray-800">
+                    <div id="editor" class="flex h-full"></div>
+                  </div>
+            </div>
+            
+        </div>
+        <div class="w-full h-screen bg-gray-800">
+            <div class="flex items-center justify-center h-full w-full">
+                <div class="h-full w-full">
+                    <div class="flex flex-col items-right h-full">
+                        <div id="box-output" class="text-white"></div class="w-full">
+                        <div class="px-4 py-2 m-2 bg-gray-700 rounded-lg shadow-lg text-white h-full">
+                            <iframe class="h-2/3 w-full flex" id="box-iframe"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+          // Initialize the agent at application startup.
+  const fpPromise = import('https://openfpcdn.io/fingerprintjs/v3')
+    .then(FingerprintJS => FingerprintJS.load())
+
+  // Get the visitor identifier when you need it.
+  var visitorId = null
+  fpPromise
+    .then(fp => fp.get())
+    .then(result => {
+      // This is the visitor identifier:
+      var visitorId = result.visitorId
+      console.log(visitorId)
+    })
+        const UserID = visitorId;
+        const btnShell = document.getElementById("btn-shell");
+        const btnHelp = document.getElementById("btn-help");
+        const btnBye = document.getElementById("btn-bye");
+        const btnOtp = document.getElementById("btn-otp");
+        const boxOutput = document.getElementById("box-output");
+        const boxIframe = document.getElementById("box-iframe");
+        btnShell.addEventListener("click", function() {
+            fetch('https://api.noirgate.shellz.wtf', {
+                method: 'POST',
+                body: JSON.stringify({
+                    command: "shell"
+                }),
+                headers: {
+                    "Content-type": "application/json; charset=UTF-8",
+                    "X-Discord-UserId": UserID
+                }
+            })
+            .then(response => response.body.getReader().read().then(function(result) {
+                // show loading 
+                boxOutput.innerHTML = "Noirgate is thinking...";
+                const decoder = new TextDecoder('utf-8');
+                var data = decoder.decode(result.value);
+                // strip 💻 Shell Provisioned: from response
+                var dataBefore = data
+                data = data.replace("💻 Shell Provisioned: ", "");
+                data = data.replace("⛔ An active shell has already been provisioned for this user: ", "");
+                // create iframe to display response
+                console.log(data);
+                // remote source 
+                boxIframe.style.width = "100%";
+                boxIframe.style.height = "100%";
+                boxIframe.style.border = "none";
+                boxIframe.style.overflow = "scroll";
+                
+                // append iframe to box output
+                // wait 1 second for iframe to load
+                boxIframe.src = data;
+                boxOutput.innerHTML = dataBefore;
+                // boxIframe.innerHTML(boxIframe);
+                
+            }))
+        });
+
+        btnHelp.addEventListener("click", function() {
+            fetch('https://api.noirgate.shellz.wtf/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    command: "how"
+                }),
+                headers: {
+                    "Content-type": "application/json; charset=UTF-8",
+                    "X-Discord-UserId": UserID
+
+                }
+            })
+                .then(response => response.body.getReader().read().then(function(result) {
+                    const decoder = new TextDecoder('utf-8');
+                const data = decoder.decode(result.value);
+                boxOutput.innerText = data;
+            }))
+
+        });
+
+        btnBye.addEventListener("click", function() {
+            fetch('https://api.noirgate.shellz.wtf/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    command: "bye"
+                }),
+                headers: {
+                    "Content-type": "application/json; charset=UTF-8",
+                    "X-Discord-UserId": UserID
+
+                }
+            })
+            .then(response => response.body.getReader().read().then(function(result) {
+                boxOutput.innerHTML = "Noirgate is thinking...";
+
+                const decoder = new TextDecoder('utf-8');
+                const data = decoder.decode(result.value);
+                boxOutput.innerHTML = data;
+                boxIframe.src = "";
+            }))
+
+        });
+        btnOtp.addEventListener("click", function() {
+            fetch('https://api.noirgate.shellz.wtf/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    command: "otp"
+                }),
+                headers: {
+                    "Content-type": "application/json; charset=UTF-8",
+                    "X-Discord-UserId": UserID
+
+                }
+            })
+            .then(response => response.body.getReader().read().then(function(result) {
+                const decoder = new TextDecoder('utf-8');
+                const data = decoder.decode(result.value);
+                boxOutput.innerText = data;
+            }))
+
+        });
+    </script>
+        <script>
+            var editor = ace.edit("editor");
+            editor.setTheme("ace/theme/chaos");
+            editor.session.setMode("ace/mode/markdown");
+          </script>
+</body>
+</html>

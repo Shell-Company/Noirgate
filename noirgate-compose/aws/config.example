@@ -1,0 +1,5 @@
+[default]
+region = us-west-2
+output = json
+access_key = AKIAEXAMPLEACCESSKEY
+secret_key = hllgXzHXh/xWZQZQYFQ/ExampleSecretKey

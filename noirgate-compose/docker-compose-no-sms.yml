@@ -1,0 +1,108 @@
+version: "3.1"
+networks:
+  noirgate-control-plane:
+    driver: "bridge"
+    ipam:
+      driver: "default"
+      config:
+        - subnet: 172.21.0.0/24
+  clients:
+    driver: "bridge"
+
+services:
+  noirgate-etcd:
+    image: quay.io/coreos/etcd:v3.2
+    environment:
+      - ALLOW_NONE_AUTHENTICATION=true
+      - ETCD_LISTEN_CLIENT_URLS=http://172.21.0.2:2379
+      - ETCD_ADVERTISE_CLIENT_URLS=http://172.21.0.2:2379
+      - ETCD_INITIAL_CLUSTER_STATE=new
+      - ETCD_DATA_DIR=/data
+    networks:
+      - noirgate-control-plane
+    read_only: false
+    restart: always
+    volumes:
+      - ./etcd-data:/data:rw
+  nginx:
+    image: nginx:latest
+    depends_on:
+      - noirgate-manager
+      - noirgate-discodns
+    environment:
+      - NGINX_DAEMON=on
+      - NOIRGATE_TLD=${NOIRGATE_TLD}
+      - NOIRGATE_SUBDOMAIN=noirgate
+      - NOIRGATE_HOST=noirgate-manager
+      - NOIRGATE_PORT=31337
+      - DISCODNS_HOST=noirgate-discodns
+      - DISCODNS_PORT=9053
+      - ETCD_HOST=noirgate-etcd
+
+    read_only: false
+    networks:
+      - clients
+      - noirgate-control-plane
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/:/etc/nginx/:ro
+  noirgate-discodns:
+    image: public.ecr.aws/v0z1z7z8/shellcompany/discodns:latest
+    environment:
+      - ETCD_HOST=noirgate-etcd
+    restart: always
+    networks:
+      - noirgate-control-plane
+    depends_on:
+      - noirgate-etcd
+  noirgate-manager:
+    image: public.ecr.aws/v0z1z7z8/shellcompany/noirgate-manager:latest
+    networks:
+      - noirgate-control-plane
+    depends_on:
+      - noirgate-discodns
+      - noirgate-etcd
+    environment:
+      - NOIRGATE_TLD=${NOIRGATE_TLD}
+      - NOIRGATE_SUB=noirgate
+      - NOIRGATE_IMAGE=public.ecr.aws/v0z1z7z8/shellcompany/noirgate
+      - NOIRGATE_ETCD_HOST=noirgate-etcd
+      - NOIRGATE_MAX_USERS=5
+      - NOIRGATE_SERVER_SECRET=${NOIRGATE_SERVER_SECRET}
+      - TWILIO_SID=${TWILIO_SID}
+      - TWILIO_TOKEN=${TWILIO_TOKEN}
+      - TWILIO_NUMBER=${TWILIO_NUMBER}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    restart: always
+    volumes:
+      - /opt/noirgate-manager/
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: [
+      "-w",
+      "-v",
+      "-network",
+      "noirgate-compose_clients",
+    ]
+  noirgate-procurement:
+    image: public.ecr.aws/v0z1z7z8/shellcompany/procurement:latest
+    depends_on:
+    - noirgate-manager
+    environment:
+      - PROCUREMENT_DISCORD_TOKEN=${NOIRGATE_BOT_TOKEN}
+    networks:
+      - noirgate-control-plane
+    read_only: false
+    restart: always
+    command: [
+      "discord",
+      "--register",
+      "--reset",
+      '--rpc-target',
+      "https://api.${NOIRGATE_SUB}.${NOIRGATE_TLD}/",
+      '-t',
+      "${NOIRGATE_BOT_TOKEN}"
+    ]
