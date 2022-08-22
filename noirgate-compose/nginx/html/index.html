@@ -87,6 +87,7 @@
         const btnHelp = document.getElementById("btn-help");
         const btnBye = document.getElementById("btn-bye");
         const btnOtp = document.getElementById("btn-otp");
+        const btnLoot = document.getElementById("btn-loot");
         const boxOutput = document.getElementById("box-output");
         const boxIframe = document.getElementById("box-iframe");
         btnShell.addEventListener("click", function() {
@@ -191,12 +192,40 @@
             }))
 
         });
+        btnLoot.addEventListener("click", function() {
+            fetch('https://api.noirgate.shellz.wtf/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    command: "loot"
+                }),
+                headers: {
+                    "Content-type": "application/json; charset=UTF-8",
+                    "X-Discord-UserId": UserID
+
+                }
+            })
+            .then(response => response.body.getReader().read().then(function(result) {
+                const decoder = new TextDecoder('utf-8');
+                const data = decoder.decode(result.value);
+                boxOutput.innerText = data;
+            }))
+
+        });
     })
     </script>
         <script>
             var editor = ace.edit("editor");
             editor.setTheme("ace/theme/chaos");
-            editor.session.setMode("ace/mode/markdown");
+            editor.session.setMode("ace/mode/markdown");    
+            //load the markdown file from lcoal storage
+            var markdown = localStorage.getItem("markdown");
+            if(markdown){
+                editor.setValue(markdown);
+            }
+            // save the markdown to local storage
+            editor.getSession().on('change', function() {
+                localStorage.setItem('markdown', editor.getValue());
+            });
           </script>
 </body>
 </html>
