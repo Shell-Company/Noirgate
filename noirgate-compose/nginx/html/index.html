@@ -39,11 +39,12 @@
                 <div>
                     <div class="flex flex-col items-center">
 
-                        <div class="flex">
-                            <button id="btn-shell" class="px-4 py-2 m-2 bg-blue-500 rounded-lg shadow-lg text-white">SHELL</button>
-                            <button id="btn-help" class="px-4 py-2 m-2 bg-blue-500 rounded-lg shadow-lg text-white">HELP</button>
-                            <button id="btn-bye" class="px-4 py-2 m-2 bg-blue-500 rounded-lg shadow-lg text-white">BYE</button>
-                            <button id="btn-otp" class="px-4 py-2 m-2 bg-blue-500 rounded-lg shadow-lg text-white">OTP</button>
+                        <div class="flex flex-col">
+                            <button id="btn-shell" class="px-4 py-2 m-2 bg-blue-500 rounded-lg shadow-lg text-white">🐚 SHELL</button>
+                            <button id="btn-otp" class="px-4 py-2 m-2 bg-blue-500 rounded-lg shadow-lg text-white">🔑 OTP</button>
+                            <button id="btn-loot" class="px-4 py-2 m-2 bg-blue-500 rounded-lg shadow-lg text-white">📦 LOOT</button>
+                            <button id="btn-help" class="px-4 py-2 m-2 bg-blue-500 rounded-lg shadow-lg text-white">🤔 HELP</button>
+                            <button id="btn-bye" class="px-4 py-2 m-2 bg-blue-500 rounded-lg shadow-lg text-white">🔥 BYE</button>
                         </div>
                     </div>
                 </div>
@@ -101,7 +102,7 @@
             })
             .then(response => response.body.getReader().read().then(function(result) {
                 // show loading 
-                boxOutput.innerHTML = "Noirgate is thinking...";
+                boxOutput.innerHTML = "⏱ Noirgate is thinking...";
                 const decoder = new TextDecoder('utf-8');
                 var data = decoder.decode(result.value);
                 // strip 💻 Shell Provisioned: from response
@@ -118,8 +119,12 @@
                 
                 // append iframe to box output
                 // wait 1 second for iframe to load
-                boxIframe.src = data;
-                boxOutput.innerHTML = dataBefore;
+                //wait 1 second for iframe to load
+                setTimeout(function() {
+                    boxIframe.src = data;
+                    boxOutput.innerHTML = dataBefore;
+                }, 2000);
+                // boxOutput.innerHTML = dataBefore;
                 // boxIframe.innerHTML(boxIframe);
                 
             }))
